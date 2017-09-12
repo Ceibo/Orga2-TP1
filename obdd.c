@@ -60,7 +60,7 @@ int32_t dictionary_var_cmp(struct dictionary_t* dict, char* a, char* b){
 	}else if(value_a < value_b){
 		return 1;
 	}else{
-		return -1;	
+		return -1;
 	}
 }
 
@@ -78,10 +78,10 @@ obdd_mgr*	obdd_mgr_create(){
 	//is initialized in 1 so that we can later check for already deleted nodes
 	new_mgr->greatest_node_ID	= 1;
 	new_mgr->greatest_var_ID	= 0;
-	
+
 	//create variables dict
 	new_mgr->vars_dict		= dictionary_create();
-	
+
 	//create constant obdds for true and false values
 	obdd* true_obdd		= malloc(sizeof(obdd));
 	true_obdd->root_obdd= obdd_mgr_mk_node(new_mgr, TRUE_VAR, NULL, NULL);
@@ -95,7 +95,17 @@ obdd_mgr*	obdd_mgr_create(){
 }
 
 void obdd_mgr_destroy(obdd_mgr* mgr){
-	// TODO: implementar funcion
+	// TODO: implementar funcion]
+	//Entiendo que el manager tiene un true_obdd, false_obdd, vars_dict.
+	//no me queda del todo clara la estructura del manager, ni que hacer con
+	// el id, greatest_node_ID y greatest_var_ID
+	//Para destruir las ramas puedo usar las funciones que me dan. Seria algo asi:
+	dictionary_destroy(mgr -> vars_dict);
+	obdd_destroy(mgr -> true_obdd);
+	obdd_destroy(mgr -> false_obdd);
+	//Me faltaria liberar memoria tal vez?
+	//y los uint32_t del mgr?
+
 }
 
 void obdd_mgr_print(obdd_mgr* mgr){
@@ -137,7 +147,7 @@ obdd*	obdd_mgr_var(obdd_mgr* mgr, char* name){
 	var_obdd->root_obdd= obdd_mgr_mk_node(mgr, name
 		, obdd_mgr_mk_node(mgr, TRUE_VAR, NULL, NULL)
 		, obdd_mgr_mk_node(mgr, FALSE_VAR, NULL, NULL));
-	return var_obdd;	
+	return var_obdd;
 }
 
 obdd*	obdd_mgr_true(obdd_mgr* mgr){ return mgr->true_obdd; }
@@ -281,11 +291,11 @@ void obdd_reduce(obdd* root){
 obdd* obdd_apply(bool (*apply_fkt)(bool,bool), obdd *left, obdd* right){
 	if(left->mgr != right->mgr)
 		return NULL;
-	
+
 	obdd* applied_obdd	= obdd_create(left->mgr, obdd_node_apply(apply_fkt, left->mgr, left->root_obdd, right->root_obdd));
 	obdd_reduce(applied_obdd);
 	return applied_obdd;
-}	
+}
 
 /** implementar en ASM
 obdd_node* obdd_node_apply(bool (*apply_fkt)(bool,bool), obdd_mgr* mgr, obdd_node* left_node, obdd_node* right_node){
@@ -310,28 +320,28 @@ obdd_node* obdd_node_apply(bool (*apply_fkt)(bool,bool), obdd_mgr* mgr, obdd_nod
 	obdd_node* applied_node;
 
 	if(is_left_constant){
-		applied_node 	= obdd_mgr_mk_node(mgr, right_var, 
-			obdd_node_apply(apply_fkt, mgr, left_node, right_node->high_obdd), 
+		applied_node 	= obdd_mgr_mk_node(mgr, right_var,
+			obdd_node_apply(apply_fkt, mgr, left_node, right_node->high_obdd),
 			obdd_node_apply(apply_fkt, mgr, left_node, right_node->low_obdd));
 	}else if(is_right_constant){
-		applied_node 	= obdd_mgr_mk_node(mgr, left_var, 
-			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node), 
+		applied_node 	= obdd_mgr_mk_node(mgr, left_var,
+			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node),
 			obdd_node_apply(apply_fkt, mgr, left_node->low_obdd, right_node));
 	}else if(left_var_ID == right_var_ID){
-		applied_node 	= obdd_mgr_mk_node(mgr, left_var, 
-			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node->high_obdd), 
+		applied_node 	= obdd_mgr_mk_node(mgr, left_var,
+			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node->high_obdd),
 			obdd_node_apply(apply_fkt, mgr, left_node->low_obdd, right_node->low_obdd));
 	}else if(left_var_ID < right_var_ID){
-		applied_node 	= obdd_mgr_mk_node(mgr, left_var, 
-			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node), 
+		applied_node 	= obdd_mgr_mk_node(mgr, left_var,
+			obdd_node_apply(apply_fkt, mgr, left_node->high_obdd, right_node),
 			obdd_node_apply(apply_fkt, mgr, left_node->low_obdd, right_node));
 	}else{
-		applied_node 	= obdd_mgr_mk_node(mgr, right_var, 
-			obdd_node_apply(apply_fkt, mgr, left_node, right_node->high_obdd), 
+		applied_node 	= obdd_mgr_mk_node(mgr, right_var,
+			obdd_node_apply(apply_fkt, mgr, left_node, right_node->high_obdd),
 			obdd_node_apply(apply_fkt, mgr, left_node, right_node->low_obdd));
 	}
 
-	return applied_node;	
+	return applied_node;
 }
 **/
 
@@ -365,27 +375,33 @@ obdd_node* obdd_node_restrict(obdd_mgr* mgr, obdd_node* root, char* var, uint32_
 	if(root_var_ID == var_ID){
 		if(value){
 			applied_node 	= obdd_mgr_mk_node(mgr, high_var
-				, root->high_obdd->high_obdd, root->high_obdd->low_obdd); 
+				, root->high_obdd->high_obdd, root->high_obdd->low_obdd);
 		}else{
 			applied_node 	= obdd_mgr_mk_node(mgr, low_var
-				, root->low_obdd->high_obdd, root->low_obdd->low_obdd);  
+				, root->low_obdd->high_obdd, root->low_obdd->low_obdd);
 		}
 	}else{
 		applied_node 	= obdd_mgr_mk_node(mgr, root_var
 			, obdd_node_restrict(mgr, root->high_obdd, var, var_ID, value)
-			, obdd_node_restrict(mgr, root->low_obdd, var, var_ID, value));  	
+			, obdd_node_restrict(mgr, root->low_obdd, var, var_ID, value));
 	}
-	return applied_node;	
+	return applied_node;
 }
 
-obdd* obdd_exists(obdd* root, char* var){ 
+obdd* obdd_exists(obdd* root, char* var){
 	// TODO: implementar funcion
-	return NULL;
+	return obdd_apply_or(obdd_apply_and(var, obdd_restrict(root, var, true)),
+ 	obdd_apply_and(obdd_apply_not(var), obdd_restrict(root, var, false)));
+	//return NULL;
+	//Tengo problemas de tipos ahi, como los resuelvo???
 }
 
-obdd* obdd_forall(obdd* root, char* var){ 
+obdd* obdd_forall(obdd* root, char* var){
 	// TODO: implementar funcion
-	return NULL;
+	return obdd_apply_and(obdd_apply_and(var, obdd_restrict(root, var, true)),
+ 	obdd_apply_and(obdd_apply_not(var), obdd_restrict(root, var, false)));
+
+	//return NULL;
 }
 
 void obdd_print(obdd* root){
@@ -412,7 +428,7 @@ bool is_tautology(obdd_mgr* mgr, obdd_node* root){
 	if(is_constant(mgr, root)){
 		return is_true(mgr, root);
 	}else{
-		return is_tautology(mgr, root->high_obdd) && is_tautology(mgr, root->low_obdd);	
+		return is_tautology(mgr, root->high_obdd) && is_tautology(mgr, root->low_obdd);
 	}
 }
 **/
@@ -422,7 +438,7 @@ bool is_sat(obdd_mgr* mgr, obdd_node* root){
 	if(is_constant(mgr, root)){
 		return is_true(mgr, root);
 	}else{
-		return is_sat(mgr, root->high_obdd) || is_sat(mgr, root->high_obdd);	
+		return is_sat(mgr, root->high_obdd) || is_sat(mgr, root->high_obdd);
 	}
 }
 **/
