@@ -69,4 +69,22 @@ ret
 
 global str_cmp
 str_cmp:
+
+call str_len; Calculo el largo de A, que estaba en RDI
+mov edx, eax; Guardo en edx el largo de A
+mov rcx, rdi; Guardo A en rcx por que voy a tener que usar ese registro
+mov rdi, rsi; Pongo B en rdi, para llamar a str_len de B]
+call str_len
+mov r8d, eax; Pongo en r8d el largo de B
+mov rdi, rcx; Vuelvo a la normalidad, pongo en rdi lo que tenia originalmente, A.
+mov ecx, r8d; Ahora tengo en edx el largo de A y en ecx el largo de B.
+
+cmp edx, ecx
+jne .fin
+
+;ahora voy a arrancar el ciclo, a comparar item por item si tienen el mismo largo
+;loop toma de ecx, uso loop de una por que si llegue hasta el ciclo.
+.comparacion:
+
+
 ret
