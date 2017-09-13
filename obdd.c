@@ -14,7 +14,8 @@ struct dictionary_t* dictionary_create(){
 void dictionary_destroy(struct dictionary_t* dict){
     uint32_t i = 1;
 	for(i = 0; i < dict->size; i++){
-	   free(dict->entries[i].key);
+	   free(dict->entries[i].key);	return obdd_apply_and(obdd_restrict(root, var, true) , obdd_restrict(root, var, false));
+
 	}
 	free(dict->entries);
 	dict->entries	= NULL;
@@ -103,9 +104,8 @@ void obdd_mgr_destroy(obdd_mgr* mgr){
 	dictionary_destroy(mgr -> vars_dict);
 	obdd_destroy(mgr -> true_obdd);
 	obdd_destroy(mgr -> false_obdd);
-	//Me faltaria liberar memoria tal vez?
-	//y los uint32_t del mgr?
-
+	free(mgr); Aca libero el ultimo puntero, el que recibe la funcion.
+	//Los uint32 no hace falta hacer nada, el struct son punteros, con liberar la memoria alcanza.
 }
 
 void obdd_mgr_print(obdd_mgr* mgr){
@@ -390,18 +390,12 @@ obdd_node* obdd_node_restrict(obdd_mgr* mgr, obdd_node* root, char* var, uint32_
 
 obdd* obdd_exists(obdd* root, char* var){
 	// TODO: implementar funcion
-	return obdd_apply_or(obdd_apply_and(var, obdd_restrict(root, var, true)),
- 	obdd_apply_and(obdd_apply_not(var), obdd_restrict(root, var, false)));
-	//return NULL;
-	//Tengo problemas de tipos ahi, como los resuelvo???
+	return obdd_apply_or(obdd_restrict(root, var, true) , obdd_restrict(root, var, false));
 }
 
 obdd* obdd_forall(obdd* root, char* var){
 	// TODO: implementar funcion
-	return obdd_apply_and(obdd_apply_and(var, obdd_restrict(root, var, true)),
- 	obdd_apply_and(obdd_apply_not(var), obdd_restrict(root, var, false)));
-
-	//return NULL;
+	return obdd_apply_and(obdd_restrict(root, var, true) , obdd_restrict(root, var, false));
 }
 
 void obdd_print(obdd* root){
@@ -416,11 +410,16 @@ void obdd_node_print(obdd_mgr* mgr, obdd_node* root, uint32_t spaces){
 
 bool is_true(obdd_mgr* mgr, obdd_node* root){
 	// TODO: implementar funcion
-	return false;
+	return mgr -> true_obdd -> root_obdd -> var_ID == root -> var_ID;
 }
+
+bool is_false(obdd_mgr* mgr, obdd_node* root){
+	return mgr -> false_obdd -> root_obdd -> var_ID == root -> var_ID;
+}
+
 bool is_constant(obdd_mgr* mgr, obdd_node* root){
 	// TODO: implementar funcion
-	return false;
+	return is_true || is_false;
 }
 
 /** implementar en ASM

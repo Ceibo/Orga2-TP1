@@ -16,12 +16,12 @@ typedef enum { false, true } bool;
 /** STRUCTS **/
 
 
-struct dictionary_entry_t {
+typedef struct dictionary_entry_t {
     char *key;
     uint32_t value;
 } __attribute__((__packed__)) dictionary_entry;
 
-struct dictionary_t{
+typedef struct dictionary_t{
 	uint32_t size;
 	uint32_t max_size;
 	struct dictionary_entry_t* entries;
