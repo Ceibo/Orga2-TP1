@@ -84,7 +84,30 @@ jne .fin
 
 ;ahora voy a arrancar el ciclo, a comparar item por item si tienen el mismo largo
 ;loop toma de ecx, uso loop de una por que si llegue hasta el ciclo.
+
 .comparacion:
+cmp [rdi], [rsi] 
+jne .noIguales; Si no son iguales los elementos termino el ciclo y mando a terminar. Ahora veo como lo hago
+inc rdi; Si pasa y es que eran iguales aumento un byte en los dos y vuelvo al ciclo.
+inc rsi
+loop .comparacion
 
+mov eax, 0;
+jmp .return;
 
+.noIguales:
+cmp [rdi], [rsi]
+ja .aMayor; jump above, por ser entero sin signo
+jb .bMayor; jump below, por ser entero sin signo
+
+.aMayor:
+mov eax, -1
+jmp .return
+
+.bMayor
+mov eax, 1
+jmp .return
+
+.return:
 ret
+
