@@ -420,6 +420,7 @@ bool is_true(obdd_mgr* mgr, obdd_node* root){
 }
 
 bool is_false(obdd_mgr* mgr, obdd_node* root){
+	// TODO: implementar funcion
 	return mgr -> false_obdd -> root_obdd -> var_ID == root -> var_ID;
 }
 
