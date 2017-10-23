@@ -1,3 +1,4 @@
+section .rodata
 %define NULL 0
 %define obdd_manager_size
 %define obdd_root_size
@@ -12,15 +13,26 @@ extern is_true
 extern is_false
 extern obdd_node_print
 
+section .data
 global obdd_mgr_mk_node
+global obdd_node_destroy
+global obdd_create
+global obdd_destroy
+global obdd_node_apply
+global is_tautology
+global is_sat
+global str_len
+global str_copy
+global str_cmp
+
+section .text
+
 obdd_mgr_mk_node:
 ret
 
-global obdd_node_destroy
 obdd_node_destroy:
 ret
 
-global obdd_create
 obdd_create:
 push rbp
 mov rbp, rsp;Me armo la pila por el malloc
@@ -35,7 +47,6 @@ pop rbp
 ;NECESITO ARMAR LA PILA ACA?
 ret
 
-global obdd_destroy
 obdd_destroy:
 ;NECESITO ARMAR LA PILA ACA? YO CREO QUE NO
 cmp qword [rdi+obdd_root_size], NULL
@@ -48,26 +59,38 @@ mov qword [rdi+obdd_root_size], NULL
 .ManagerDelete:
 mov qword [rdi+obdd_root_size], NULL
 call free;Libero la memoria dinamica que estaba usando ahí
-
-
 ret
 
-global obdd_node_apply
 obdd_node_apply:
 ret
 
-global is_tautology
 is_tautology:
+;La implementacion en C es igual a la de is_sat, así que acá también
+mov r8, rdi
+mov r9, rsi
+call is_constant
+cmp rax, 0
+jnz .constant
+mov rdi, r8
+mov rsi, [r9+obdd_node_high_offset]
+call is_tautology
+mov rdi, r8
+mov rsi, [r9+obdd_node_low_offset]
+call is_tautology
 ret
 
-global is_sat
-is_sat:
+.constant:
+mov r8, rdi
+mov r9, rsi
+call is_true
+ret
 
+is_sat:
 mov r8, rdi
 mov r9, rsi; Me guardo rdi y rsi
 call is_constant
 cmp rax, 0; es constante? Iguales=Constante, Distintos=No es constante
-jnz .not_true; Si 
+jnz .not_constant; Si 
 mov rdi, r8
 mov rsi, [r9+obdd_node_high_offset]; En rsi la rama alta del nodp
 call is_sat
@@ -79,14 +102,13 @@ mov r11, rax; Ahora tengo en r10 y r11 los resultados
 ret
 ;jmp .terminar
 
-.not_true:
+.not_constant:
 mov rdi, r8
 mov rsi, r9
 call is_true
 ;.terminar:
 ret
 
-global str_len
 str_len:
 xor r12, r12; limpio r12d, ese va a ser el contador de 32 bits que voy a deovlver
 .sumar:
@@ -100,7 +122,6 @@ jmp .sumar:
 mov eax, r12d
 ret
 
-global str_copy
 str_copy: ;tengo en RDI el string a copiar
 call str_len ; llamo a esa funcion para tener el largo del string y saber hasta donde copiar
 mov r10, rdi; me guardo el string de entrada para mandarlo despues a rax
@@ -118,9 +139,7 @@ loop .copiarChar; loop labura sobre el rcx
 call free; libero la memoria
 ret
 
-global str_cmp
 str_cmp:
-
 call str_len; Calculo el largo de A, que estaba en RDI
 mov edx, eax; Guardo en edx el largo de A
 mov rcx, rdi; Guardo A en rcx por que voy a tener que usar ese registro
