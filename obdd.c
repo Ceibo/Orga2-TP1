@@ -406,6 +406,12 @@ void obdd_print(obdd* root){
 
 void obdd_node_print(obdd_mgr* mgr, obdd_node* root, uint32_t spaces){
 	// TODO: implementar funcion
+	uint32_t a(0);
+	while(a < spaces){
+		printf("%s\n", );
+		a++;
+	}
+	//CONTINUAR!!
 }
 
 bool is_true(obdd_mgr* mgr, obdd_node* root){
@@ -419,7 +425,7 @@ bool is_false(obdd_mgr* mgr, obdd_node* root){
 
 bool is_constant(obdd_mgr* mgr, obdd_node* root){
 	// TODO: implementar funcion
-	return is_true || is_false;
+	return is_true(mgr, root) || is_false(mgr, root);
 }
 
 /** implementar en ASM
