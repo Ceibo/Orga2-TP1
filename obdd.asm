@@ -3,8 +3,19 @@ section .rodata
 %define obdd_manager_size
 %define obdd_root_size
 
+%define obdd_node_var_ID_offset 0
+%define obdd_node_node_ID_offset 4
+%define obdd_node_ref_count_offset 8
 %define obdd_node_high_offset 12
 %define obdd_node_low_offset 20
+%define obdd_node_size 28;3 uint32 y 2 punteros. 224 bits
+
+%define mgr_ID_offset 0
+%define mgr_greatest_node_ID_offset 4
+%define mgr_greatest_var_ID_offset 8
+%define mgr_true_obdd_offset 12
+%define mgr_false_obdd_offset 20
+%define mgr_vars_dicc_offset 28
 
 extern free
 extern malloc
@@ -12,6 +23,9 @@ extern is_constant
 extern is_true
 extern is_false
 extern obdd_node_print
+extern dictionary_add_entry
+extern obdd_mgr_get_next_node_ID
+
 
 section .data
 global obdd_mgr_mk_node
@@ -28,6 +42,63 @@ global str_cmp
 section .text
 
 obdd_mgr_mk_node:
+;pusha
+push rdi
+push rsi
+push rdx
+push rcx
+push r12
+push r13
+push r15
+push r15
+mov rdi, obdd_node_size
+call malloc
+
+;pop rcx
+;pop rdx
+pop rsi
+pop rdi NO PUEDO HACER ESTO, LIFO!!!
+ARREGLARLO!!!
+;popa
+mov r8, rax;En r8 tengo el puntero a memoria
+
+mov r9, rdi
+;mov r10, rsi
+mov rdi, [r9+mgr_vars_dicc_offset]
+call dictionary_add_entry; acá hago new_node->var_id = var_ID
+mov r10d, eax; En r10 tengo el dicc entry
+mov rdi, r9; restauro rdi
+call obdd_mgr_get_next_node_ID
+mov r11d, eax; Me estoy quedando sin registros, si sigo así voy a tener que mandar cosas a pila
+
+pop rcx;Me los traigo ahora por que antes tenía calls que me los podían modificar
+pop rdx;y tampoco era necesario traelos antes por que no los usaba ninguna de las funciones que llamé
+
+mov [r8+obdd_node_var_ID_offset], r10d
+mov [r8+obdd_node_node_ID_offset], r11d
+mov [r8+obdd_node_ref_count_offset], 0
+mov [r8+obdd_node_high_offset], rdx
+mov [r8+obdd_node_low_offset], rcx
+
+cmp rdx, NULL; comparo el High de entrada con NULL
+je .sig_comparacion
+add dword [r8+obdd_node_ref_count_ofset], 1
+mov [r8+obdd_node_low_offset], rcx;EN RCX ESTÁ LOW
+;high -> ref_count++
+;new_node -> low_obdd = low
+
+.sig_comparacion:
+cmp rcx, NULL; comparo el Low de entrada con NULL
+je .fin
+add dword [rcx+obdd_node_ref_count], 1;EN RCX ESTA LOW. MODIFICARLO CUANDO ARREGLE LA PILA
+mov dword [r8+obdd_node_ref_count_offset], 0
+
+
+.fin:
+mov rax, r8; Pongo en el resultado la dirección de r8 que me paso malloc, y donde fui completando
+;todos los campos del nuevo nodo.
+y todos los pops
+
 ret
 
 obdd_node_destroy:
